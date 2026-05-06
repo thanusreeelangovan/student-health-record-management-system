@@ -1,4 +1,4 @@
-# MediCampus — Full-Stack Student Health Management System
+# MediCampus — Full-Stack Student Health Record Management System
 
 > Upgraded from your Tkinter desktop app → Full-stack web application
 
