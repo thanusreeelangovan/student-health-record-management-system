@@ -1,4 +1,4 @@
-# 🏥 MediCampus — Full-Stack Student Health Management System
+# MediCampus — Full-Stack Student Health Management System
 
 > Upgraded from your Tkinter desktop app → Full-stack web application
 
@@ -57,15 +57,15 @@ http://localhost:5000
 - **Password:** doctor123
 
 ## Features
-- ✅ JWT Login / Signup system
-- ✅ Patient CRUD (Add, View, Update, Delete)
-- ✅ Health records per patient (diagnosis, vitals, medications)
-- ✅ Appointment booking & status management
-- ✅ Doctor dashboard with live stats
-- ✅ Analytics with 4 chart types (Bar, Line, Doughnut, Polar)
-- ✅ Search & filter patients
-- ✅ Pre-seeded demo data (8 students, 10 health records)
-- ✅ Responsive dark UI
+-  JWT Login / Signup system
+-  Patient CRUD (Add, View, Update, Delete)
+-  Health records per patient (diagnosis, vitals, medications)
+-  Appointment booking & status management
+-  Doctor dashboard with live stats
+-  Analytics with 4 chart types (Bar, Line, Doughnut, Polar)
+-  Search & filter patients
+-  Pre-seeded demo data (8 students, 10 health records)
+-  Responsive dark UI
 
 ## Upgrade Path
 To connect to MySQL instead of SQLite, replace `sqlite3` with `mysql-connector-python`
