@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCampus — Student Health Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0f1e;
+  --surface: #111827;
+  --surface2: #1a2235;
+  --border: #1e2d45;
+  --accent: #00d4aa;
+  --accent2: #4f8ef7;
+  --accent3: #f7694f;
+  --accent4: #f0b429;
+  --text: #e8edf7;
+  --text2: #7a8ba8;
+  --text3: #4a5d78;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; min-height: 100vh; overflow-x: hidden; }
+h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+/* ── Scrollbar ─────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── Auth Screen ────────────────────────────── */
+#auth-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at 20% 50%, #0d2040 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, #001a30 0%, transparent 50%),
+              var(--bg);
+  position: relative; overflow: hidden;
+}
+#auth-screen::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(0,212,170,0.03) 60px, rgba(0,212,170,0.03) 61px),
+              repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(0,212,170,0.03) 60px, rgba(0,212,170,0.03) 61px);
+}
+.auth-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; padding: 48px; width: 420px; position: relative; z-index: 1;
+  box-shadow: 0 0 60px rgba(0,212,170,0.08), var(--shadow);
+}
+.auth-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+.auth-logo-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.auth-logo h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.auth-logo span { color: var(--accent); }
+.auth-tabs { display: flex; gap: 4px; margin-bottom: 32px; background: var(--bg); border-radius: 10px; padding: 4px; }
+.auth-tab {
+  flex: 1; padding: 8px; text-align: center; border-radius: 8px; cursor: pointer;
+  font-family: 'Syne', sans-serif; font-weight: 600; font-size: 13px;
+  color: var(--text2); transition: all 0.2s;
+}
+.auth-tab.active { background: var(--accent); color: #000; }
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+.form-input {
+  width: 100%; padding: 12px 16px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--accent); }
+.btn {
+  padding: 12px 24px; border-radius: 10px; font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary { background: var(--accent); color: #000; width: 100%; justify-content: center; }
+.btn-primary:hover { background: #00bfa0; transform: translateY(-1px); }
+.btn-danger { background: rgba(247,105,79,0.15); color: var(--accent3); border: 1px solid rgba(247,105,79,0.3); }
+.btn-danger:hover { background: rgba(247,105,79,0.25); }
+.auth-hint { text-align: center; margin-top: 16px; color: var(--text2); font-size: 13px; }
+.auth-hint strong { color: var(--accent); }
+
+/* ── App Layout ─────────────────────────────── */
+#app { display: none; min-height: 100vh; }
+.sidebar {
+  width: 240px; background: var(--surface); border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column;
+  z-index: 100;
+}
+.sidebar-logo { padding: 24px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+.sidebar-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.sidebar-logo h2 { font-size: 16px; font-weight: 800; }
+.sidebar-logo span { color: var(--accent); }
+.sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
+  cursor: pointer; color: var(--text2); font-weight: 500; transition: all 0.2s; font-size: 13.5px;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(0,212,170,0.12); color: var(--accent); }
+.nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+.sidebar-user {
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent2), var(--accent));
+  display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 14px; color: #fff; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { color: var(--text2); font-size: 11px; }
+.logout-btn { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; padding: 4px; transition: color 0.2s; }
+.logout-btn:hover { color: var(--accent3); }
+
+.main-content { margin-left: 240px; min-height: 100vh; padding: 32px; }
+
+/* ── Page ───────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; }
+.page-header { margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; }
+.page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.page-subtitle { color: var(--text2); font-size: 13px; margin-top: 4px; }
+
+/* ── Cards ──────────────────────────────────── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+}
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; right: 0; width: 80px; height: 80px;
+  border-radius: 0 var(--radius) 0 80px; opacity: 0.12;
+}
+.stat-card:nth-child(1)::before { background: var(--accent); }
+.stat-card:nth-child(2)::before { background: var(--accent2); }
+.stat-card:nth-child(3)::before { background: var(--accent4); }
+.stat-card:nth-child(4)::before { background: var(--accent3); }
+.stat-icon { font-size: 22px; margin-bottom: 12px; }
+.stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; line-height: 1; }
+.stat-label { color: var(--text2); font-size: 12px; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── Table ──────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody td { padding: 14px 16px; font-size: 13.5px; }
+.badge {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge-green { background: rgba(0,212,170,0.15); color: var(--accent); }
+.badge-blue { background: rgba(79,142,247,0.15); color: var(--accent2); }
+.badge-yellow { background: rgba(240,180,41,0.15); color: var(--accent4); }
+.badge-red { background: rgba(247,105,79,0.15); color: var(--accent3); }
+
+/* ── Search Bar ─────────────────────────────── */
+.search-bar {
+  display: flex; align-items: center; gap: 12px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px;
+  width: 280px;
+}
+.search-bar input { background: none; border: none; outline: none; color: var(--text); font-size: 14px; width: 100%; }
+.search-bar span { color: var(--text3); }
+
+/* ── Chart ──────────────────────────────────── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.chart-container { position: relative; height: 220px; }
+canvas { max-height: 220px; }
+
+/* ── Modal ──────────────────────────────────── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 999; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 32px; width: 560px; max-height: 90vh; overflow-y: auto;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-title { font-size: 20px; font-weight: 800; }
+.modal-close { background: none; border: none; color: var(--text2); font-size: 22px; cursor: pointer; padding: 4px; }
+.modal-close:hover { color: var(--accent3); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-actions { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+select.form-input option { background: var(--surface2); }
+
+/* ── Patient Detail ─────────────────────────── */
+.back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text2); cursor: pointer; font-size: 13px; margin-bottom: 20px; }
+.back-btn:hover { color: var(--accent); }
+.patient-header { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+.patient-avatar-lg {
+  width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+}
+.patient-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.record-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 12px;
+}
+.record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.record-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.record-field label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text3); }
+.record-field p { font-size: 13px; margin-top: 2px; }
+.vitals-row { display: flex; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.vital { text-align: center; }
+.vital-val { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--accent); }
+.vital-label { font-size: 10px; color: var(--text3); text-transform: uppercase; }
+
+/* ── Toast ──────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px; z-index: 9999;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s; box-shadow: var(--shadow);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-success { border-left: 3px solid var(--accent); }
+.toast-error { border-left: 3px solid var(--accent3); }
+
+/* ── Appointments ───────────────────────────── */
+.apt-card {
+  display: flex; align-items: center; gap: 16px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px;
+}
+.apt-time { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--accent); min-width: 64px; }
+.apt-info { flex: 1; }
+.apt-name { font-weight: 600; font-size: 14px; }
+.apt-meta { color: var(--text2); font-size: 12px; margin-top: 2px; }
+
+/* ── Empty State ────────────────────────────── */
+.empty { text-align: center; padding: 60px 20px; color: var(--text2); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+
+/* ── Loading ─────────────────────────────────── */
+.spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🏥</div>
+      <h1>Medi<span>Campus</span></h1>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Login</div>
+      <div class="auth-tab" onclick="switchTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- Login -->
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="login-email" type="email" placeholder="doctor@school.com" value="doctor@school.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="login-pw" type="password" placeholder="••••••••" value="doctor123">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">Login to Dashboard</button>
+      <p class="auth-hint">Demo: <strong>doctor@school.com</strong> / <strong>doctor123</strong></p>
+    </div>
+
+    <!-- Signup -->
+    <div id="signup-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="signup-name" type="text" placeholder="Dr. Your Name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="signup-email" type="email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="signup-pw" type="password" placeholder="Create password">
+      </div>
+      <button class="btn btn-primary" onclick="doSignup()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🏥</div>
+      <h2>Medi<span>Campus</span></h2>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('patients')"><span class="icon">👥</span> Patients</div>
+      <div class="nav-item" onclick="showPage('appointments')"><span class="icon">📅</span> Appointments</div>
+      <div class="nav-item" onclick="showPage('analytics')"><span class="icon">📈</span> Analytics</div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-initials">D</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name-display">Doctor</div>
+        <div class="user-role">School Doctor</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-subtitle">Welcome back, <span id="dash-name">Doctor</span></div>
+        </div>
+      </div>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="s-patients">—</div><div class="stat-label">Total Students</div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" id="s-records">—</div><div class="stat-label">Health Records</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="s-apts">—</div><div class="stat-label">Appointments</div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-value" id="s-today">—</div><div class="stat-label">Today's Visits</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="card"><h3 style="font-size:15px;margin-bottom:16px;">Top Diagnoses</h3><div class="chart-container"><canvas id="chart-diagnoses"></canvas></div></div>
+        <div class="card"><h3 style="font-size:15px;margin-bottom:16px;">Monthly Visits</h3><div class="chart-container"><canvas id="chart-monthly"></canvas></div></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px;margin-bottom:16px;">Today's Appointments</h3>
+        <div id="today-apts"></div>
+      </div>
+    </div>
+
+    <!-- PATIENTS -->
+    <div class="page" id="page-patients">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Patients</div>
+          <div class="page-subtitle">Manage student health records</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="search-bar">
+            <span>🔍</span>
+            <input type="text" id="patient-search" placeholder="Search by name, ID, class..." oninput="searchPatients()">
+          </div>
+          <button class="btn btn-primary" onclick="openModal('add-patient-modal')">+ Add Patient</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th><th>ID</th><th>Class</th><th>Gender</th><th>Blood Group</th><th>Contact</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="patients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATIENT DETAIL -->
+    <div class="page" id="page-patient-detail">
+      <div class="back-btn" onclick="showPage('patients')">← Back to Patients</div>
+      <div id="patient-detail-content"></div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="page" id="page-appointments">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Appointments</div>
+          <div class="page-subtitle">Scheduled visits and consultations</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('add-apt-modal')">+ Book Appointment</button>
+      </div>
+      <div id="apts-container"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Analytics</div>
+          <div class="page-subtitle">Health insights and trends</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="card"><h3 style="font-size:15px;margin-bottom:16px;">Gender Distribution</h3><div class="chart-container"><canvas id="chart-gender"></canvas></div></div>
+        <div class="card"><h3 style="font-size:15px;margin-bottom:16px;">Students by Class</h3><div class="chart-container"><canvas id="chart-class"></canvas></div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="card"><h3 style="font-size:15px;margin-bottom:16px;">Blood Group Distribution</h3><div class="chart-container"><canvas id="chart-blood"></canvas></div></div>
+        <div class="card"><h3 style="font-size:15px;margin-bottom:16px;">Diagnosis Frequency</h3><div class="chart-container"><canvas id="chart-diag2"></canvas></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+
+<!-- Add Patient -->
+<div class="modal-overlay" id="add-patient-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Patient</div>
+      <button class="modal-close" onclick="closeModal('add-patient-modal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Student ID *</label><input class="form-input" id="p-sid" placeholder="S009"></div>
+      <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" id="p-name" placeholder="Student name"></div>
+      <div class="form-group"><label class="form-label">Age</label><input class="form-input" id="p-age" type="number" placeholder="16"></div>
+      <div class="form-group"><label class="form-label">Gender</label>
+        <select class="form-input" id="p-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Class</label><input class="form-input" id="p-class" placeholder="12"></div>
+      <div class="form-group"><label class="form-label">Section</label><input class="form-input" id="p-section" placeholder="A"></div>
+      <div class="form-group"><label class="form-label">Blood Group</label>
+        <select class="form-input" id="p-blood"><option value="">Select</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Student Contact</label><input class="form-input" id="p-contact" placeholder="9876543210"></div>
+      <div class="form-group"><label class="form-label">Parent Contact</label><input class="form-input" id="p-parent" placeholder="9876543211"></div>
+      <div class="form-group full"><label class="form-label">Address</label><input class="form-input" id="p-address" placeholder="City, State"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-patient-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addPatient()">Add Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Record -->
+<div class="modal-overlay" id="add-record-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Health Record</div>
+      <button class="modal-close" onclick="closeModal('add-record-modal')">✕</button>
+    </div>
+    <input type="hidden" id="r-pid">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Visit Date *</label><input class="form-input" id="r-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Diagnosis</label><input class="form-input" id="r-diagnosis" placeholder="e.g., Common Cold"></div>
+      <div class="form-group full"><label class="form-label">Symptoms</label><input class="form-input" id="r-symptoms" placeholder="e.g., Fever, Headache"></div>
+      <div class="form-group full"><label class="form-label">Treatment</label><input class="form-input" id="r-treatment" placeholder="e.g., Rest and fluids"></div>
+      <div class="form-group full"><label class="form-label">Medications</label><input class="form-input" id="r-meds" placeholder="e.g., Paracetamol 500mg"></div>
+      <div class="form-group"><label class="form-label">Weight (kg)</label><input class="form-input" id="r-weight" type="number" placeholder="55"></div>
+      <div class="form-group"><label class="form-label">Height (cm)</label><input class="form-input" id="r-height" type="number" placeholder="165"></div>
+      <div class="form-group"><label class="form-label">Blood Pressure</label><input class="form-input" id="r-bp" placeholder="120/80"></div>
+      <div class="form-group"><label class="form-label">Temperature (°C)</label><input class="form-input" id="r-temp" type="number" step="0.1" placeholder="37.0"></div>
+      <div class="form-group full"><label class="form-label">Notes</label><input class="form-input" id="r-notes" placeholder="Additional notes"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-record-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addRecord()">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Appointment -->
+<div class="modal-overlay" id="add-apt-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Book Appointment</div>
+      <button class="modal-close" onclick="closeModal('add-apt-modal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full"><label class="form-label">Patient</label>
+        <select class="form-input" id="apt-patient"></select>
+      </div>
+      <div class="form-group"><label class="form-label">Date *</label><input class="form-input" id="apt-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Time *</label><input class="form-input" id="apt-time" type="time"></div>
+      <div class="form-group full"><label class="form-label">Reason</label><input class="form-input" id="apt-reason" placeholder="Reason for visit"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-apt-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addAppointment()">Book Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Success</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const API = '';
+let TOKEN = localStorage.getItem('shms_token');
+let USER = JSON.parse(localStorage.getItem('shms_user') || 'null');
+let currentPatients = [];
+let chartsInit = { dashboard: false, analytics: false };
+
+// ── Chart defaults ───────────────────────────────────────────────────────────
+Chart.defaults.color = '#7a8ba8';
+Chart.defaults.borderColor = '#1e2d45';
+Chart.defaults.font.family = 'DM Sans';
+
+// ── Startup ──────────────────────────────────────────────────────────────────
+window.onload = () => {
+  if (TOKEN && USER) showApp();
+  else document.getElementById('auth-screen').style.display = 'flex';
+};
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='signup')));
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-pw').value;
+  const res = await fetch(`${API}/api/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+  const data = await res.json();
+  if (!res.ok) return showToast(data.error, 'error');
+  TOKEN = data.token; USER = data.user;
+  localStorage.setItem('shms_token', TOKEN);
+  localStorage.setItem('shms_user', JSON.stringify(USER));
+  showApp();
+}
+
+async function doSignup() {
+  const name = document.getElementById('signup-name').value;
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-pw').value;
+  const res = await fetch(`${API}/api/signup`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name, email, password}) });
+  const data = await res.json();
+  if (!res.ok) return showToast(data.error, 'error');
+  TOKEN = data.token; USER = data.user;
+  localStorage.setItem('shms_token', TOKEN);
+  localStorage.setItem('shms_user', JSON.stringify(USER));
+  showApp();
+}
+
+function logout() {
+  TOKEN = null; USER = null;
+  localStorage.removeItem('shms_token'); localStorage.removeItem('shms_user');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-name-display').textContent = USER.name;
+  document.getElementById('dash-name').textContent = USER.name;
+  document.getElementById('user-initials').textContent = USER.name[0].toUpperCase();
+  showPage('dashboard');
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  const navMap = {dashboard:0, patients:1, appointments:2, analytics:3};
+  if (navMap[page] !== undefined) document.querySelectorAll('.nav-item')[navMap[page]].classList.add('active');
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'patients') loadPatients();
+  if (page === 'appointments') loadAppointments();
+  if (page === 'analytics') loadAnalytics();
+}
+
+// ── API Helper ────────────────────────────────────────────────────────────────
+async function api(url, opts={}) {
+  const res = await fetch(API + url, {
+    ...opts,
+    headers: { 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN}`, ...(opts.headers||{}) }
+  });
+  return res.json();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+let dashCharts = {};
+async function loadDashboard() {
+  const data = await api('/api/analytics');
+  document.getElementById('s-patients').textContent = data.summary.total_patients;
+  document.getElementById('s-records').textContent = data.summary.total_records;
+  document.getElementById('s-apts').textContent = data.summary.total_appointments;
+  document.getElementById('s-today').textContent = data.summary.today_appointments;
+
+  renderDashCharts(data);
+  loadTodayApts();
+}
+
+function renderDashCharts(data) {
+  // Diagnoses bar
+  if (dashCharts.diag) dashCharts.diag.destroy();
+  dashCharts.diag = new Chart(document.getElementById('chart-diagnoses'), {
+    type: 'bar',
+    data: {
+      labels: data.diagnoses.map(d => d.diagnosis),
+      datasets: [{ data: data.diagnoses.map(d => d.count), backgroundColor: ['#00d4aa','#4f8ef7','#f0b429','#f7694f','#a78bfa','#34d399'], borderRadius: 6 }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{ y:{grid:{color:'#1e2d45'}}, x:{grid:{display:false}} } }
+  });
+
+  // Monthly line
+  const monthly = [...data.monthly_visits].reverse();
+  if (dashCharts.monthly) dashCharts.monthly.destroy();
+  dashCharts.monthly = new Chart(document.getElementById('chart-monthly'), {
+    type: 'line',
+    data: {
+      labels: monthly.map(m => m.month),
+      datasets: [{ data: monthly.map(m => m.visits), borderColor:'#4f8ef7', backgroundColor:'rgba(79,142,247,0.1)', tension:0.4, fill:true, pointBackgroundColor:'#4f8ef7', pointRadius:4 }]
+    },
+    options: { plugins:{legend:{display:false}}, scales:{ y:{grid:{color:'#1e2d45'}}, x:{grid:{display:false}} } }
+  });
+}
+
+async function loadTodayApts() {
+  const apts = await api('/api/appointments');
+  const today = new Date().toISOString().split('T')[0];
+  const todayApts = apts.filter(a => a.appointment_date === today);
+  const el = document.getElementById('today-apts');
+  if (!todayApts.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><h3>No appointments today</h3></div>';
+    return;
+  }
+  el.innerHTML = todayApts.map(a => `
+    <div class="apt-card">
+      <div class="apt-time">${a.appointment_time}</div>
+      <div class="apt-info">
+        <div class="apt-name">${a.patient_name}</div>
+        <div class="apt-meta">Class ${a.class}-${a.section} • ${a.reason || 'General checkup'}</div>
+      </div>
+      <span class="badge badge-${a.status==='completed'?'green':'blue'}">${a.status}</span>
+    </div>
+  `).join('');
+}
+
+// ── Patients ──────────────────────────────────────────────────────────────────
+async function loadPatients(q='') {
+  const url = q ? `/api/patients?q=${encodeURIComponent(q)}` : '/api/patients';
+  currentPatients = await api(url);
+  renderPatients(currentPatients);
+  // Also populate apt modal
+  const sel = document.getElementById('apt-patient');
+  sel.innerHTML = currentPatients.map(p => `<option value="${p.id}">${p.name} (${p.student_id})</option>`).join('');
+}
+
+function renderPatients(patients) {
+  const tbody = document.getElementById('patients-tbody');
+  if (!patients.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text2)">No patients found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = patients.map(p => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-family:Syne,sans-serif;font-size:13px">
+            ${p.name[0]}
+          </div>
+          <span style="font-weight:500">${p.name}</span>
+        </div>
+      </td>
+      <td><span style="color:var(--text2)">${p.student_id}</span></td>
+      <td><span class="badge badge-blue">Class ${p.class||'—'}-${p.section||'—'}</span></td>
+      <td>${p.gender || '—'}</td>
+      <td><span class="badge badge-${p.blood_group?.includes('-')?'red':'green'}">${p.blood_group || '—'}</span></td>
+      <td style="color:var(--text2)">${p.contact || '—'}</td>
+      <td>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="viewPatient(${p.id})">View</button>
+          <button class="btn btn-danger" style="padding:6px 12px;font-size:12px" onclick="deletePatient(${p.id})">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function searchPatients() {
+  const q = document.getElementById('patient-search').value;
+  if (q.length > 1 || q.length === 0) loadPatients(q);
+}
+
+async function viewPatient(pid) {
+  showPage('patient-detail');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item')[1].classList.add('active');
+  const data = await api(`/api/patients/${pid}`);
+  const p = data.patient;
+  document.getElementById('patient-detail-content').innerHTML = `
+    <div class="patient-header">
+      <div class="patient-avatar-lg">${p.name[0]}</div>
+      <div>
+        <h2 style="font-size:22px;font-weight:800">${p.name}</h2>
+        <div class="patient-meta">
+          <span class="badge badge-blue">${p.student_id}</span>
+          <span class="badge badge-green">Class ${p.class||'—'}-${p.section||'—'}</span>
+          <span class="badge badge-${p.blood_group?.includes('-')?'red':'yellow'}">${p.blood_group||'—'}</span>
+          <span class="badge badge-blue">${p.gender||'—'}</span>
+          <span class="badge badge-blue">Age ${p.age||'—'}</span>
+        </div>
+        <div style="color:var(--text2);font-size:13px;margin-top:8px">📞 ${p.contact||'—'} &nbsp;|&nbsp; 👨‍👩‍👧 ${p.parent_contact||'—'} &nbsp;|&nbsp; 📍 ${p.address||'—'}</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddRecord(${p.id})">+ Add Record</button>
+    </div>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:12px">Health Records (${data.records.length})</h3>
+    ${data.records.length ? data.records.map(r => `
+      <div class="record-card">
+        <div class="record-header">
+          <div>
+            <strong style="font-size:15px">${r.diagnosis || 'Visit'}</strong>
+            <div style="color:var(--text2);font-size:12px;margin-top:2px">📅 ${r.visit_date} &nbsp;|&nbsp; Dr. ${r.doctor_name}</div>
+          </div>
+        </div>
+        <div class="record-fields">
+          <div class="record-field"><label>Symptoms</label><p>${r.symptoms||'—'}</p></div>
+          <div class="record-field"><label>Treatment</label><p>${r.treatment||'—'}</p></div>
+          <div class="record-field"><label>Medications</label><p>${r.medications||'—'}</p></div>
+        </div>
+        ${r.weight||r.height||r.blood_pressure||r.temperature ? `
+        <div class="vitals-row">
+          ${r.weight?`<div class="vital"><div class="vital-val">${r.weight}kg</div><div class="vital-label">Weight</div></div>`:''}
+          ${r.height?`<div class="vital"><div class="vital-val">${r.height}cm</div><div class="vital-label">Height</div></div>`:''}
+          ${r.blood_pressure?`<div class="vital"><div class="vital-val">${r.blood_pressure}</div><div class="vital-label">BP</div></div>`:''}
+          ${r.temperature?`<div class="vital"><div class="vital-val">${r.temperature}°C</div><div class="vital-label">Temp</div></div>`:''}
+        </div>` : ''}
+        ${r.notes?`<div style="margin-top:10px;font-size:12px;color:var(--text2);background:var(--bg);padding:10px;border-radius:8px">📝 ${r.notes}</div>`:''}
+      </div>
+    `).join('') : '<div class="empty"><div class="empty-icon">📋</div><h3>No records yet</h3><p>Add the first health record for this student</p></div>'}
+  `;
+}
+
+function openAddRecord(pid) {
+  document.getElementById('r-pid').value = pid;
+  document.getElementById('r-date').value = new Date().toISOString().split('T')[0];
+  openModal('add-record-modal');
+}
+
+async function addRecord() {
+  const pid = document.getElementById('r-pid').value;
+  const body = {
+    patient_id: pid, visit_date: document.getElementById('r-date').value,
+    diagnosis: document.getElementById('r-diagnosis').value,
+    symptoms: document.getElementById('r-symptoms').value,
+    treatment: document.getElementById('r-treatment').value,
+    medications: document.getElementById('r-meds').value,
+    weight: document.getElementById('r-weight').value || null,
+    height: document.getElementById('r-height').value || null,
+    blood_pressure: document.getElementById('r-bp').value,
+    temperature: document.getElementById('r-temp').value || null,
+    notes: document.getElementById('r-notes').value
+  };
+  const res = await api('/api/records', { method:'POST', body: JSON.stringify(body) });
+  closeModal('add-record-modal');
+  showToast('Health record saved!');
+  viewPatient(pid);
+}
+
+async function addPatient() {
+  const body = {
+    student_id: document.getElementById('p-sid').value,
+    name: document.getElementById('p-name').value,
+    age: document.getElementById('p-age').value || null,
+    gender: document.getElementById('p-gender').value,
+    class: document.getElementById('p-class').value,
+    section: document.getElementById('p-section').value,
+    blood_group: document.getElementById('p-blood').value,
+    contact: document.getElementById('p-contact').value,
+    parent_contact: document.getElementById('p-parent').value,
+    address: document.getElementById('p-address').value
+  };
+  const res = await api('/api/patients', { method:'POST', body: JSON.stringify(body) });
+  if (res.error) return showToast(res.error, 'error');
+  closeModal('add-patient-modal');
+  showToast('Patient added successfully!');
+  loadPatients();
+}
+
+async function deletePatient(pid) {
+  if (!confirm('Delete this patient and all their records?')) return;
+  await api(`/api/patients/${pid}`, { method:'DELETE' });
+  showToast('Patient deleted');
+  loadPatients();
+}
+
+// ── Appointments ──────────────────────────────────────────────────────────────
+async function loadAppointments() {
+  const apts = await api('/api/appointments');
+  const el = document.getElementById('apts-container');
+  if (!apts.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><h3>No appointments yet</h3></div>';
+    return;
+  }
+  const grouped = {};
+  apts.forEach(a => { if (!grouped[a.appointment_date]) grouped[a.appointment_date] = []; grouped[a.appointment_date].push(a); });
+  el.innerHTML = Object.entries(grouped).map(([date, items]) => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">${date}</div>
+      ${items.map(a => `
+        <div class="apt-card">
+          <div class="apt-time">${a.appointment_time}</div>
+          <div class="apt-info">
+            <div class="apt-name">${a.patient_name}</div>
+            <div class="apt-meta">${a.student_id} • Class ${a.class}-${a.section} • ${a.reason||'General checkup'}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-${a.status==='completed'?'green':a.status==='cancelled'?'red':'blue'}">${a.status}</span>
+            ${a.status==='scheduled'?`<button class="btn btn-secondary" style="padding:5px 10px;font-size:11px" onclick="completeApt(${a.id})">Complete</button>`:''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+async function addAppointment() {
+  const body = {
+    patient_id: document.getElementById('apt-patient').value,
+    appointment_date: document.getElementById('apt-date').value,
+    appointment_time: document.getElementById('apt-time').value,
+    reason: document.getElementById('apt-reason').value
+  };
+  await api('/api/appointments', { method:'POST', body: JSON.stringify(body) });
+  closeModal('add-apt-modal');
+  showToast('Appointment booked!');
+  loadAppointments();
+}
+
+async function completeApt(id) {
+  await api(`/api/appointments/${id}`, { method:'PUT', body: JSON.stringify({status:'completed'}) });
+  showToast('Marked as completed');
+  loadAppointments();
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+let analyticsCharts = {};
+async function loadAnalytics() {
+  const data = await api('/api/analytics');
+  renderAnalyticsCharts(data);
+}
+
+function renderAnalyticsCharts(data) {
+  const COLORS = ['#00d4aa','#4f8ef7','#f0b429','#f7694f','#a78bfa','#34d399','#f472b6'];
+  const opts = { plugins:{legend:{display:false}}, scales:{ y:{grid:{color:'#1e2d45'}}, x:{grid:{display:false}} } };
+
+  if (analyticsCharts.gender) analyticsCharts.gender.destroy();
+  analyticsCharts.gender = new Chart(document.getElementById('chart-gender'), {
+    type: 'doughnut',
+    data: { labels: data.gender_dist.map(g=>g.gender), datasets:[{ data: data.gender_dist.map(g=>g.count), backgroundColor: COLORS, borderWidth:0 }] },
+    options: { plugins:{ legend:{ display:true, position:'bottom', labels:{color:'#7a8ba8',padding:12} } }, cutout:'65%' }
+  });
+
+  if (analyticsCharts.classChart) analyticsCharts.classChart.destroy();
+  analyticsCharts.classChart = new Chart(document.getElementById('chart-class'), {
+    type: 'bar',
+    data: { labels: data.class_dist.map(c=>`Class ${c.class}`), datasets:[{ data: data.class_dist.map(c=>c.count), backgroundColor: COLORS, borderRadius:6 }] },
+    options: opts
+  });
+
+  if (analyticsCharts.blood) analyticsCharts.blood.destroy();
+  analyticsCharts.blood = new Chart(document.getElementById('chart-blood'), {
+    type: 'polarArea',
+    data: { labels: data.blood_groups.map(b=>b.blood_group), datasets:[{ data: data.blood_groups.map(b=>b.count), backgroundColor: COLORS.map(c=>c+'99'), borderWidth:0 }] },
+    options: { plugins:{ legend:{ display:true, position:'bottom', labels:{color:'#7a8ba8',padding:10} } } }
+  });
+
+  if (analyticsCharts.diag2) analyticsCharts.diag2.destroy();
+  analyticsCharts.diag2 = new Chart(document.getElementById('chart-diag2'), {
+    type: 'bar', indexAxis: 'y',
+    data: { labels: data.diagnoses.map(d=>d.diagnosis), datasets:[{ data: data.diagnoses.map(d=>d.count), backgroundColor:'rgba(79,142,247,0.7)', borderRadius:4 }] },
+    options: { plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'#1e2d45'}}, y:{grid:{display:false}} } }
+  });
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-icon').textContent = type === 'error' ? '❌' : '✅';
+  document.getElementById('toast-msg').textContent = msg;
+  t.className = `toast toast-${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
